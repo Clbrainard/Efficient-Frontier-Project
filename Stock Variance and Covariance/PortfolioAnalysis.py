@@ -18,15 +18,15 @@ class portfolioAnalyzer:
     def get_clean_points(self,numPoints,allowShort=False,percentile=90):
         points = self.get_plot(numPoints,allowShort)
         # Step 1: remove all with negative y
-        filtered = [t for t,p in points if t[1] >= 0]
+        filtered = [(t,p) for t,p in points if t[1] >= 0]
         if not filtered:
             return []
-        scores = np.array([np.sqrt(t[0]**2 + t[1]**2) for t in filtered])
+        scores = np.array([np.sqrt(t[0]**2 + t[1]**2) for t,p in filtered])
         cutoff = np.percentile(scores, percentile)
         cleaned = [t for t, s in zip(filtered, scores) if s <= cutoff]
         
-        maxX = np.max(points[:, 0])
-        maxY = np.max(points[:, 1])
+        maxX = max(pair[0][0] for pair in points)
+        maxY = max(pair[0][1] for pair in points)
 
         return cleaned, maxX, maxY
 

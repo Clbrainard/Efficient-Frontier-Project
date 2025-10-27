@@ -43,4 +43,14 @@ class portfolio:
     
     def get_point(self):
         return (self.get_standard_deviation(), self.get_expected_return())
+    
+    def get_weights(self):
+        return self.weights
+    
+    def get_display(self):
+        tuples = zip(self.stocks,self.weights)
+        disp = ""
+        for t in tuples:
+            disp += f"<br>{t[0].ticker} : {round(t[1],2)}"
+        return disp
 
