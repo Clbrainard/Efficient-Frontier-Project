@@ -15,11 +15,26 @@ class portfolioAnalyzer:
             self.stocks.append(riskFreeAsset(riskFreeRate))
         self.riskFreeRate = riskFreeRate
 
+    def get_clean_points(self,numPoints,allowShort=False,percentile=90):
+        points = self.get_plot(numPoints,allowShort)
+        # Step 1: remove all with negative y
+        filtered = [t for t,p in points if t[1] >= 0]
+        if not filtered:
+            return []
+        scores = np.array([np.sqrt(t[0]**2 + t[1]**2) for t in filtered])
+        cutoff = np.percentile(scores, percentile)
+        cleaned = [t for t, s in zip(filtered, scores) if s <= cutoff]
+        
+        maxX = np.max(points[:, 0])
+        maxY = np.max(points[:, 1])
+
+        return cleaned, maxX, maxY
+
     def get_plot(self,a,allowShort=False):
         ps = self.get_x_random_portfolios(a,allowShort)
         tuples = []
         for p in ps:
-            tuples.append(p.get_point())
+            tuples.append((p.get_point(),p))
         return tuples
     
     def get_x_random_portfolios(self,x,allowShort=False):
