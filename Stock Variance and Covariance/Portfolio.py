@@ -1,5 +1,6 @@
 from Securities import stock,riskFreeAsset
 import math
+import numpy as np
 
 class portfolio:
     
@@ -11,11 +12,13 @@ class portfolio:
             self.weights.append(arg[1])
         
         self.riskFreeRate = riskFreeRate
+        self.ER = self.get_expected_return()
+        self.STD = self.get_standard_deviation()
 
     def get_expected_return(self):
         summation = 0
         for stock,weight in zip(self.stocks,self.weights):
-            summation += stock.get_expected_return() * weight
+            summation += stock.ER * weight
 
         return summation
 
@@ -23,7 +26,7 @@ class portfolio:
         summation = 0
 
         for s,weight in zip(self.stocks,self.weights):
-            summation += (weight ** 2) * s.get_variance()
+            summation += (weight ** 2) * s.VAR
 
         for i in range(len(self.stocks)):
             for j in range(len(self.stocks)):
@@ -39,10 +42,10 @@ class portfolio:
         return self.get_standard_deviation() * math.sqrt(252)
     
     def get_sharpe_ratio(self):
-        return (self.get_expected_return() - self.riskFreeRate) / self.get_standard_deviation()
+        return (self.ER- self.riskFreeRate) / self.STD
     
     def get_point(self):
-        return (self.get_standard_deviation(), self.get_expected_return())
+        return (self.STD, self.ER)
     
     def get_weights(self):
         return self.weights

@@ -5,7 +5,12 @@ import pandas_datareader.data as web
 
 class riskFreeAsset:
     def __init__(self, rate):
+        self.ticker = "Treasury Bond"
         self.rate = rate  # annual risk-free rate
+        self.DR = self.get_daily_returns()
+        self.ER = self.get_expected_return()
+        self.VAR = self.get_variance()
+        self.STD = self.get_standard_deviation()
 
     def get_expected_return(self):
         return self.rate / 252  # daily return if needed
@@ -32,6 +37,11 @@ class stock:
     def __init__(self,ticker):
         self.ticker = ticker
         self.closes = self.get_historical_closes()
+        self.DR = self.get_daily_returns()
+        self.ER = self.get_expected_return()
+        self.VAR = self.get_variance()
+        self.STD = self.get_standard_deviation()
+        
         
     def get_historical_closes(self):
         end_date = datetime.today()
@@ -48,19 +58,15 @@ class stock:
     #past year
     def get_daily_returns(self):
         closes = self.closes
-        daily_returns = []
-        for i in range(1,len(closes)):
-            daily_returns.append((closes[i]-closes[i-1]) / closes[i-1])
-
-        return daily_returns
+        return [(closes[i]-closes[i-1]) / closes[i-1] for i in range(1,len(closes))]
 
     def get_expected_return(self): 
-        returns = self.get_daily_returns()
+        returns = self.DR
         return sum(returns) / (len(returns) - 1)
         
     def get_variance(self):
-        returns = self.get_daily_returns()
-        expected = self.get_expected_return()
+        returns = self.DR
+        expected = self.ER
         summation = 0
 
         for R in returns:
@@ -69,10 +75,10 @@ class stock:
         return summation/ (len(returns) - 1)
     
     def get_covariance(stockA,stockB):
-        returnsA = stockA.get_daily_returns()
-        expectedA = stockA.get_expected_return()
-        returnsB = stockB.get_daily_returns()
-        expectedB = stockB.get_expected_return()
+        returnsA = stockA.DR
+        expectedA = stockA.ER
+        returnsB = stockB.DR
+        expectedB = stockB.ER
         summation = 0
 
         for RA, RB in zip(returnsA,returnsB):
@@ -81,22 +87,17 @@ class stock:
         return summation / (len(returnsA)-1)
 
     def get_standard_deviation(self):
-        return math.sqrt(self.get_variance())
+        return math.sqrt(self.VAR)
 
     def get_annualized_volatility(self):
-        std = self.get_standard_deviation()
+        std = self.STD
         return std * math.sqrt(252)
 
     def get_correlation(stockA, stockB):
-        stdA = stockA.get_standard_deviation()
-        stdB = stockB.get_standard_deviation()
+        stdA = stockA.STD
+        stdB = stockB.STD
         cov = stock.get_covariance(stockA,stockB)
 
         return cov / (stdA * stdB)
 
-# Example usage:
-if __name__ == "__main__":
-    #A = stock("AAPL")
-    #B = stock("NVDA")
-    C = riskFreeAsset(0.05)
-    print(C.get_expected_return())
+
