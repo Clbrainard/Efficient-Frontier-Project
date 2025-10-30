@@ -1,5 +1,4 @@
-from Portfolio import portfolio
-from FrontierVisualizer import FrontierVisualizer
+
 import matplotlib.pyplot as plt
 import streamlit as st
 import numpy as np
