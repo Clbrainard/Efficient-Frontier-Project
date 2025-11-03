@@ -4,6 +4,7 @@ import numpy as np
 import plotly.graph_objects as go
 from Portfolio import portfolio
 
+
 class FrontierVisualizer:
     
     def __init__(self,riskFreeRate,stocks,weights,includeBond=False,allowShort=False,numPoints=5000,percentileCutoff=99):
@@ -17,7 +18,7 @@ class FrontierVisualizer:
 
         p = portfolioAnalyzer(self.r,includeBond,*stocks)
         self.points,self.maxX,self.maxY = p.get_clean_points(self.numPoints,self.allowShort,self.percentileCutoff)
-        #self.optimal_p = self.get_optimal_portfolio(self.points)
+        self.optimal_p = self.get_optimal_portfolio(self.points)
     
     def get_ticker_list(self):
         return [s.ticker for s in self.stocks]
@@ -33,7 +34,7 @@ class FrontierVisualizer:
         return (bestSharpe[1].get_point(), bestSharpe[1])
 
     def get_sharpe_from_point(self,c):
-        return (c[1]-self.r)/c[0]
+        return (c[1]-(self.r/365))/c[0]
     
     def update_user_point(self,weights):
         self.userP = portfolio(self.r,*zip(self.stocks,weights))
@@ -44,10 +45,10 @@ class FrontierVisualizer:
         Supports hover tooltips that display the extra value 'v' for each point.
         """
 
-        #optimal_point = self.optimal_p
+        optimal_point = self.optimal_p
         user_point = self.userP.get_point()
         user_label = "Your portfolio"
-        #opt_label = f"Optimal (approx): {optimal_point[1].get_display()}"
+        opt_label = f"Optimal (approx): {optimal_point[1].get_display()}"
         pts = list(self.points)
         if not pts:
             fig = go.Figure()
@@ -90,7 +91,7 @@ class FrontierVisualizer:
             bgcolor="rgba(214,39,40,0.9)",  # optional halo
             bordercolor="white", borderwidth=2
         )
-        """
+        
         if optimal_point != None:
             fig.add_trace(go.Scatter(
                 x=[optimal_point[0][0]], y=[optimal_point[0][1]],
@@ -109,7 +110,7 @@ class FrontierVisualizer:
                 bgcolor="rgba(214,39,40,0.9)",  # optional halo
                 bordercolor="white", borderwidth=2
             )
-            """
+            
     
         fig.update_layout(
             title="Portfolio Risk–Return Scatter",
