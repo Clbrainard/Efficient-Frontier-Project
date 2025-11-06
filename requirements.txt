@@ -3,6 +3,4 @@ matplotlib
 numpy
 yfinance
 pandas
-requests
 plotly
-math
