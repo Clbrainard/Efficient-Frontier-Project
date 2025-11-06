@@ -1,7 +1,11 @@
 import yfinance as yf
 from datetime import datetime, timedelta
 import math
-import pandas_datareader.data as web
+import pandas as pd
+import requests
+
+
+
 
 class riskFreeAsset:
     def __init__(self, rate):
@@ -43,81 +47,18 @@ class stock:
         self.STD = self.get_standard_deviation()
     
     def get_historical_closes(self):
-        """
-        Returns a list of daily close (prefer adjusted if available) for the last 365 days.
-        Tries Stooq via pandas_datareader first, then falls back to Yahoo via yfinance.
-        """
-        # Use end as "tomorrow" so most APIs include today's bar if available.
-        end_date = datetime.today() + timedelta(days=1)
-        start_date = end_date - timedelta(days=366)  # one extra day to be safe
-
-        data = None
-        errors = []
-
-        # 1) Try Stooq via pandas_datareader
-        try:
-            data = web.DataReader(self.ticker, "stooq", start_date, end_date)
-        except Exception as e:
-            errors.append(f"stooq error: {e}")
-
-        # 2) Fallback to Yahoo via yfinance if needed
-        if data is None or data.empty:
-            try:
-                import yfinance as yf
-                # yfinance returns columns: Open, High, Low, Close, Adj Close, Volume
-                data = yf.download(self.ticker, start=start_date.date(), end=end_date.date(), progress=False)
-            except Exception as e:
-                errors.append(f"yfinance error: {e}")
-
-        if data is None or data.empty:
-            raise RuntimeError(
-                f"No price data returned for ticker {self.ticker}. "
-                f"Tried Stooq and Yahoo. Details: {' | '.join(errors)}"
-            )
-
-        # Ensure a proper DateTime index and ascending order
-        if not data.index.is_monotonic_increasing:
-            data = data.sort_index()
-
-        # Be resilient to column-casing and naming differences
-        cols_lower = {c.lower(): c for c in data.columns}
-        close_col = None
-
-        # Prefer adjusted close when available
-        for candidate in ("adj close", "adj_close", "adjusted close"):
-            if candidate in cols_lower:
-                close_col = cols_lower[candidate]
-                break
-
-        # Then try plain close
-        if close_col is None:
-            for candidate in ("close",):
-                if candidate in cols_lower:
-                    close_col = cols_lower[candidate]
-                    break
-
-        # As last resort, use last column if it looks numeric
-        if close_col is None:
-            if len(data.columns) >= 1:
-                close_col = data.columns[-1]
-            else:
-                raise ValueError(
-                    f"No close-like column found for {self.ticker}. "
-                    f"Available columns: {list(data.columns)}"
-                )
-
-        # Clean and return as list
-        daily_closes = (
-            data[close_col]
-            .dropna()
-            .astype(float)
-            .tolist()
+        end = int(datetime.now().timestamp())
+        start = int((datetime.now() - timedelta(days=2*365)).timestamp())
+        url = (
+            f'https://query1.finance.yahoo.com/v7/finance/download/{self.ticker}'
+            f'?period1={start}&period2={end}&interval=1d&events=history'
         )
+        df = pd.read_csv(url)
+        df['Date'] = pd.to_datetime(df['Date'])
+        df.set_index('Date', inplace=True)
+        return df['Close']
 
-        if not daily_closes:
-            raise RuntimeError(f"All close values were NaN/empty for {self.ticker} after cleaning.")
 
-        return daily_closes
 
     
     #past year
@@ -165,3 +106,6 @@ class stock:
 
         return cov / (stdA * stdB)
 
+s= stock("AAPL")
+closes = s.get_daily_closes()
+print(closes)
