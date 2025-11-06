@@ -41,38 +41,84 @@ class stock:
         self.ER = self.get_expected_return()
         self.VAR = self.get_variance()
         self.STD = self.get_standard_deviation()
-        
-        
+    
     def get_historical_closes(self):
-        end_date = datetime.today()
-        start_date = end_date - timedelta(days=365)
+        `"""
+        Returns a list of daily close (prefer adjusted if available) for the last 365 days.
+        Tries Stooq via pandas_datareader first, then falls back to Yahoo via yfinance.
+        """
+        # Use end as "tomorrow" so most APIs include today's bar if available.
+        end_date = datetime.today() + timedelta(days=1)
+        start_date = end_date - timedelta(days=366)  # one extra day to be safe
 
-        data = web.DataReader(self.ticker, "stooq", start_date, end_date)
-        data = data.sort_index()
+        data = None
+        errors = []
 
-        # The data source may name the close column differently depending on the reader.
-        # Try several common names, fall back to case-insensitive match, then last column.
-        daily_closes = None
-        for col in ("Close", "close", "Adj Close", "adj close", "Adj_Close", "adj_close"):
-            if col in data.columns:
-                daily_closes = data[col]
+        # 1) Try Stooq via pandas_datareader
+        try:
+            data = web.DataReader(self.ticker, "stooq", start_date, end_date)
+        except Exception as e:
+            errors.append(f"stooq error: {e}")
+
+        # 2) Fallback to Yahoo via yfinance if needed
+        if data is None or data.empty:
+            try:
+                import yfinance as yf
+                # yfinance returns columns: Open, High, Low, Close, Adj Close, Volume
+                data = yf.download(self.ticker, start=start_date.date(), end=end_date.date(), progress=False)
+            except Exception as e:
+                errors.append(f"yfinance error: {e}")
+
+        if data is None or data.empty:
+            raise RuntimeError(
+                f"No price data returned for ticker {self.ticker}. "
+                f"Tried Stooq and Yahoo. Details: {' | '.join(errors)}"
+            )
+
+        # Ensure a proper DateTime index and ascending order
+        if not data.index.is_monotonic_increasing:
+            data = data.sort_index()
+
+        # Be resilient to column-casing and naming differences
+        cols_lower = {c.lower(): c for c in data.columns}
+        close_col = None
+
+        # Prefer adjusted close when available
+        for candidate in ("adj close", "adj_close", "adjusted close"):
+            if candidate in cols_lower:
+                close_col = cols_lower[candidate]
                 break
 
-        if daily_closes is None:
-            # Try case-insensitive match
-            cols_lower = {c.lower(): c for c in data.columns}
-            if 'close' in cols_lower:
-                daily_closes = data[cols_lower['close']]
+        # Then try plain close
+        if close_col is None:
+            for candidate in ("close",):
+                if candidate in cols_lower:
+                    close_col = cols_lower[candidate]
+                    break
 
-        if daily_closes is None:
-            # As a last resort, use the last column (often the close or adjusted close)
+        # As last resort, use last column if it looks numeric
+        if close_col is None:
             if len(data.columns) >= 1:
-                daily_closes = data.iloc[:, -1]
+                close_col = data.columns[-1]
             else:
-                raise ValueError(f"No close price column found for ticker {self.ticker}. Available columns: {list(data.columns)}")
+                raise ValueError(
+                    f"No close-like column found for {self.ticker}. "
+                    f"Available columns: {list(data.columns)}"
+                )
 
-        closes_list = daily_closes.tolist()
-        return closes_list
+        # Clean and return as list
+        daily_closes = (
+            data[close_col]
+            .dropna()
+            .astype(float)
+            .tolist()
+        )
+
+        if not daily_closes:
+            raise RuntimeError(f"All close values were NaN/empty for {self.ticker} after cleaning.")
+
+        return daily_closes
+
     
     #past year
     def get_daily_returns(self):
