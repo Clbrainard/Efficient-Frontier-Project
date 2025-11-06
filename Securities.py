@@ -50,9 +50,28 @@ class stock:
         data = web.DataReader(self.ticker, "stooq", start_date, end_date)
         data = data.sort_index()
 
-        daily_closes = data['Close']
+        # The data source may name the close column differently depending on the reader.
+        # Try several common names, fall back to case-insensitive match, then last column.
+        daily_closes = None
+        for col in ("Close", "close", "Adj Close", "adj close", "Adj_Close", "adj_close"):
+            if col in data.columns:
+                daily_closes = data[col]
+                break
+
+        if daily_closes is None:
+            # Try case-insensitive match
+            cols_lower = {c.lower(): c for c in data.columns}
+            if 'close' in cols_lower:
+                daily_closes = data[cols_lower['close']]
+
+        if daily_closes is None:
+            # As a last resort, use the last column (often the close or adjusted close)
+            if len(data.columns) >= 1:
+                daily_closes = data.iloc[:, -1]
+            else:
+                raise ValueError(f"No close price column found for ticker {self.ticker}. Available columns: {list(data.columns)}")
+
         closes_list = daily_closes.tolist()
-        
         return closes_list
     
     #past year
@@ -99,5 +118,4 @@ class stock:
         cov = stock.get_covariance(stockA,stockB)
 
         return cov / (stdA * stdB)
-
 
