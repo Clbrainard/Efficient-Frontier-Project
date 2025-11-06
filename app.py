@@ -5,7 +5,7 @@ import numpy as np
 import yfinance as yf
 from datetime import datetime, timedelta
 import math
-import pandas_datareader.data as web
+
 import random 
 from Securities import stock
 from FrontierVisualizer import FrontierVisualizer
