@@ -43,7 +43,7 @@ class stock:
         self.STD = self.get_standard_deviation()
     
     def get_historical_closes(self):
-        `"""
+        """
         Returns a list of daily close (prefer adjusted if available) for the last 365 days.
         Tries Stooq via pandas_datareader first, then falls back to Yahoo via yfinance.
         """
