@@ -3,8 +3,9 @@ from datetime import datetime, timedelta
 import math
 import pandas as pd
 import requests
+import streamlit as st
 
-
+api_key=st.secrets["KEY"]
 
 
 class riskFreeAsset:
@@ -47,16 +48,26 @@ class stock:
         self.STD = self.get_standard_deviation()
     
     def get_historical_closes(self):
-        end = int(datetime.now().timestamp())
-        start = int((datetime.now() - timedelta(days=2*365)).timestamp())
-        url = (
-            f'https://query1.finance.yahoo.com/v7/finance/download/{self.ticker}'
-            f'?period1={start}&period2={end}&interval=1d&events=history'
-        )
-        df = pd.read_csv(url)
-        df['Date'] = pd.to_datetime(df['Date'])
-        df.set_index('Date', inplace=True)
-        return df['Close']
+        end = datetime.now()
+        start = end - timedelta(days=365)
+        start_str = start.strftime("%Y-%m-%d")
+        end_str = end.strftime("%Y-%m-%d")
+
+        url = f"https://api.polygon.io/v2/aggs/ticker/{self.ticker}/range/1/day/{start_str}/{end_str}"
+        params = {"adjusted": "true", "sort": "asc", "limit": 50000, "apiKey": api_key}
+
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json().get("results", [])
+
+        if not data:
+            raise ValueError(f"No data found for ticker '{self.ticker}'")
+
+        df = pd.DataFrame(data)
+        df["t"] = pd.to_datetime(df["t"], unit="ms")
+        df.set_index("t", inplace=True)
+
+        return df["c"]  # 'c' is the close price
 
 
 
