@@ -13,6 +13,7 @@ from Portfolio import portfolio
 
 
 
+api_key=st.secrets["KEY"]
 
 st.set_page_config(page_title="Efficient Frontier Tool", layout="wide")
 
@@ -97,7 +98,7 @@ if render:
             st.session_state["pv"].update_user_point(weights)
             st.session_state["fig"] = st.session_state["pv"].get_plot()
         else:
-            stocks = [stock(t) for t in tickers]
+            stocks = [stock(t,api_key) for t in tickers]
             st.session_state["bond"] = include_bond
             obj = FrontierVisualizer(rf, stocks, w.tolist(), numPoints=int(num_points),includeBond=include_bond)
             st.session_state["weigths"] = weights

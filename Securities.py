@@ -8,6 +8,7 @@ import streamlit as st
 api_key=st.secrets["KEY"]
 
 
+
 class riskFreeAsset:
     def __init__(self, rate):
         self.ticker = "Treasury Bond"
@@ -39,13 +40,14 @@ class riskFreeAsset:
 
 class stock:
 
-    def __init__(self,ticker):
+    def __init__(self,ticker,key):
         self.ticker = ticker
         self.closes = self.get_historical_closes()
         self.DR = self.get_daily_returns()
         self.ER = self.get_expected_return()
         self.VAR = self.get_variance()
         self.STD = self.get_standard_deviation()
+        self.key = key
     
     def get_historical_closes(self):
         end = datetime.now()
@@ -54,7 +56,7 @@ class stock:
         end_str = end.strftime("%Y-%m-%d")
 
         url = f"https://api.polygon.io/v2/aggs/ticker/{self.ticker}/range/1/day/{start_str}/{end_str}"
-        params = {"adjusted": "true", "sort": "asc", "limit": 50000, "apiKey": api_key}
+        params = {"adjusted": "true", "sort": "asc", "limit": 50000, "apiKey": self.key}
 
         response = requests.get(url, params=params)
         response.raise_for_status()
@@ -116,7 +118,3 @@ class stock:
         cov = stock.get_covariance(stockA,stockB)
 
         return cov / (stdA * stdB)
-
-s= stock("AAPL")
-closes = s.get_daily_closes()
-print(closes)
