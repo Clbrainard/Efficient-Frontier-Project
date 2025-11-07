@@ -26,26 +26,22 @@ if "fig" not in st.session_state:
 st.title("Efficient Frontier")
 st.caption("Choose 2–5 stocks and weights in the sidebar, set the risk-free rate, then click **Render**.")
 
-# ----- Sidebar -----
 st.sidebar.header("Inputs")
 
-# Risk-free rate
 rf = st.sidebar.number_input(
     "Risk-free rate (decimal, e.g., 0.03 = 3%)",
     min_value=-0.50, max_value=0.50, step=0.001, value=0.03, format="%.4f"
 )
 
-# Number of pairs (2–5)
 n_pairs = st.sidebar.slider("Number of stocks/weights", min_value=2, max_value=5, value=5)
 
-# NEW: Number of points on the frontier (500–8000), default around n_pairs*1500
+# Number of points on the frontier (500–8000), default around n_pairs*1500
 default_points = int(np.clip(n_pairs * 1500, 500, 8000))
 num_points = st.sidebar.slider("Number of frontier points", min_value=500, max_value=8000, value=default_points, step=100)
 
-# NEW: Include a bond (risk-free asset) in the frontier calculation
+# Include a bond (risk-free asset) in the frontier calculation
 include_bond = st.sidebar.checkbox("Include bond (risk-free asset) in frontier calc", value=False)
 
-# Defaults
 default_tickers_pool = ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL"]
 default_weights = [round(1.0 / n_pairs, 2)] * n_pairs
 
@@ -54,7 +50,6 @@ st.sidebar.subheader("Tickers & Weights")
 tickers = []
 weights = []
 
-# Two columns to make the inputs compact
 col_t, col_w = st.sidebar.columns([2, 1])
 
 for i in range(n_pairs):
@@ -70,21 +65,14 @@ for i in range(n_pairs):
     tickers.append(t)
     weights.append(w)
 
-# Utilities
 w_sum = float(np.sum(weights))
 st.sidebar.markdown(f"**Current weight sum:** `{w_sum:.4f}`")
 
-# Render button
 render = st.sidebar.button("Render", type="primary")
 
-#update_user = st.sidebar.button("Update user point only")
 
-# ----- Main Area -----
-
-# ----- Main Area -----
 
 if render:
-    # Basic validations
     if any(t == "" for t in tickers):
         st.error("Please fill in all tickers.")
         st.stop()
@@ -106,7 +94,6 @@ if render:
             st.session_state["fig"] = st.session_state["pv"].get_plot()
 
   
-        # Keep the object + baseline inputs so we can update the user point without recomputing the frontier
         st.session_state["base_inputs"] = {
             "rf": rf,
             "tickers": tickers.copy(),

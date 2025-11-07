@@ -12,14 +12,14 @@ api_key=st.secrets["KEY"]
 class riskFreeAsset:
     def __init__(self, rate):
         self.ticker = "Treasury Bond"
-        self.rate = rate  # annual risk-free rate
+        self.rate = rate 
         self.DR = self.get_daily_returns()
         self.ER = self.get_expected_return()
         self.VAR = self.get_variance()
         self.STD = self.get_standard_deviation()
 
     def get_expected_return(self):
-        return self.rate / 252  # daily return if needed
+        return self.rate / 252 
 
     def get_variance(self):
         return 0

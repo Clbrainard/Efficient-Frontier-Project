@@ -40,10 +40,6 @@ class FrontierVisualizer:
         self.userP = portfolio(self.r,*zip(self.stocks,weights))
 
     def get_plot(self):
-        """
-        Build a Plotly figure for Streamlit's st.plotly_chart(fig).
-        Supports hover tooltips that display the extra value 'v' for each point.
-        """
 
         optimal_point = self.optimal_p
         user_point = self.userP.get_point()
@@ -61,7 +57,7 @@ class FrontierVisualizer:
 
         X = np.array([p[0][0] for p in pts], dtype=float)
         Y = np.array([p[0][1] for p in pts], dtype=float)
-        V = [p[1] for p in pts]  # keep as-is for hover text
+        V = [p[1] for p in pts]  
 
         # Main cloud
         fig = go.Figure()
