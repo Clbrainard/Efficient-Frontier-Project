@@ -41,13 +41,14 @@ class riskFreeAsset:
 class stock:
 
     def __init__(self,ticker,key):
+        self.key = key
         self.ticker = ticker
         self.closes = self.get_historical_closes()
         self.DR = self.get_daily_returns()
         self.ER = self.get_expected_return()
         self.VAR = self.get_variance()
         self.STD = self.get_standard_deviation()
-        self.key = key
+        
     
     def get_historical_closes(self):
         end = datetime.now()
@@ -71,9 +72,6 @@ class stock:
 
         return df["c"]  # 'c' is the close price
 
-
-
-    
     #past year
     def get_daily_returns(self):
         closes = self.closes
