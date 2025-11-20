@@ -37,7 +37,7 @@ n_pairs = st.sidebar.slider("Number of stocks/weights", min_value=2, max_value=5
 
 # Number of points on the frontier (500–8000), default around n_pairs*1500
 default_points = int(np.clip(n_pairs * 1500, 500, 8000))
-num_points = st.sidebar.slider("Number of frontier points", min_value=500, max_value=8000, value=default_points, step=100)
+num_points = st.sidebar.slider("Number of frontier points", min_value=500, max_value=15000, value=default_points, step=100)
 
 # Include a bond (risk-free asset) in the frontier calculation
 include_bond = st.sidebar.checkbox("Include bond (risk-free asset) in frontier calc", value=False)
